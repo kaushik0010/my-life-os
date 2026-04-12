@@ -29,6 +29,7 @@ const FOLDERS: Folder[] = [
     files: [
       { name: "first_crush.txt", content: "Had a crush in school but never said anything 💀" },
       { name: "school_memories.txt", content: "Lunch breaks, PT periods, and random chaos" },
+      { name: "guest_arrival_panic_mode.txt", content: "when guests come and suddenly you become the most well-behaved kid" },
     ],
   },
   {
@@ -42,7 +43,9 @@ const FOLDERS: Folder[] = [
     name: "School",
     files: [
       { name: "last_bench.txt", content: "Best memories happened here" },
-      { name: "exam_panic.txt", content: "Studied one night before every exam" },
+      { name: "roll_number_called_and_no_answer.txt", content: "when teacher called your roll number and you didn't realize it was yours 💀" },
+      { name: "accidental_mom_moment.txt", content: `The moment when someone called the teacher "Mom" in class 😭` },
+      { name: "homework_not_done_excuse_generator.txt", content: `"ma'am i forgot my notebook at home" worked way too many times` },
     ],
   },
   {
@@ -50,6 +53,8 @@ const FOLDERS: Folder[] = [
     files: [
       { name: "regret.log", content: "Why did I send that message..." },
       { name: "why_am_i_like_this.txt", content: "Still figuring this out" },
+      { name: "checking_phone_every_2_minutes.txt", content: "checking phone again even though no new notification" },
+      { name: "delete_for_me_mistake.txt", content: "that moment when you clicked “delete for me” instead of “delete for everyone” 💀" },
     ],
   },
 ];

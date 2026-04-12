@@ -6,11 +6,16 @@ import { BootScreen } from "@/features/device/BootScreen";
 import { ShutdownScreen } from "@/features/device/ShutdownScreen";
 import { PowerOffScreen } from "@/features/device/PowerOffScreen";
 import { Desktop } from "@/features/os/Desktop";
+import { NokiaDevice } from "@/features/nokia/NokiaDevice";
 import { useSound } from "@/hooks/useSound";
 
 type DeviceState = "booting" | "ready" | "shuttingDown" | "off" | "restarting" | "poweredOff";
 
-export function DeviceExperience() {
+export function DeviceExperience({ device = "xp" }: { device?: string }) {
+  // Nokia has its own device frame — renders outside the XP monitor
+  if (device === "nokia") {
+    return <NokiaDevice />;
+  }
   const [deviceState, setDeviceState] = useState<DeviceState>("booting");
   const playStartup = useSound("/sounds/windows-xp-startup.mp3");
 
