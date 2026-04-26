@@ -6,7 +6,7 @@ import { useSound } from "@/hooks/useSound";
 
 const KEYPAD = ["1","2","3","4","5","6","7","8","9","*","0","#"];
 
-export function NokiaDevice() {
+export function NokiaDevice({ osId, isOwner = true, isTemporary = true, messages = [] }: { osId: string; isOwner?: boolean; isTemporary?: boolean; messages?: Array<{ id: string; sender: string; content: string; time: string; os_id: string }> }) {
   const [isBooting, setIsBooting] = useState(true);
   const playBoot = useSound("/sounds/nokia-boot.mp3");
 
@@ -38,7 +38,7 @@ export function NokiaDevice() {
               <span className="text-xs text-gray-600">connecting people...</span>
             </div>
           ) : (
-            <NokiaScreen />
+            <NokiaScreen osId={osId} isOwner={isOwner} isTemporary={isTemporary} dbMessages={messages} />
           )}
         </div>
 

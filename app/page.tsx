@@ -1,6 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/AuthProvider";
+import { supabase } from "@/lib/supabase";
+import { authFetch } from "@/lib/api-client";
 
 const DEVICES = [
   {
@@ -21,15 +25,53 @@ const DEVICES = [
 
 export default function Home() {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function handleSelect(deviceId: string) {
-    const id = crypto.randomUUID();
-    router.push(`/os/${id}?device=${deviceId}`);
+  async function handleSelect(deviceId: string) {
+    setLoading(true);
+    setError(null);
+
+    try {
+      if (user) {
+        // Check for existing OS with this device type
+        const { data: existingOs } = await supabase
+          .from("life_os")
+          .select("id")
+          .eq("user_id", user!.id)
+          .eq("device_type", deviceId)
+          .limit(1)
+          .single();
+
+        if (existingOs) {
+          router.push(`/os/${existingOs.id}?device=${deviceId}`);
+          return;
+        }
+      }
+
+      // Create new OS (auth token sent automatically if logged in)
+      const res = await authFetch("/api/os/create", {
+        method: "POST",
+        body: JSON.stringify({ device_type: deviceId }),
+      });
+
+      if (res.ok) {
+        const { id } = await res.json();
+        router.push(`/os/${id}?device=${deviceId}`);
+      } else {
+        setError("Failed to create OS. Please try again.");
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error("Error:", err);
+      setError("Failed to create OS. Please try again.");
+      setLoading(false);
+    }
   }
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-8 text-center">
-      {/* Hero */}
       <h1 className="text-4xl font-bold text-gray-900 max-w-xl leading-tight">
         What if your memories lived inside old devices?
       </h1>
@@ -38,7 +80,6 @@ export default function Home() {
       </p>
       <p className="text-sm text-gray-400">No login. Just memories.</p>
 
-      {/* Device selection */}
       <div className="mt-6 flex flex-col items-center gap-4 w-full">
         <h2 className="text-xl font-semibold text-gray-700">Choose your device</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -46,9 +87,9 @@ export default function Home() {
             <button
               key={device.id}
               onClick={() => device.available && handleSelect(device.id)}
-              disabled={!device.available}
+              disabled={!device.available || loading}
               className={`relative p-6 rounded-lg border flex flex-col items-center gap-2 transition-shadow
-                ${device.available
+                ${device.available && !loading
                   ? "cursor-pointer hover:shadow-md bg-white"
                   : "cursor-not-allowed opacity-50 bg-gray-50"
                 }`}
@@ -64,9 +105,10 @@ export default function Home() {
             </button>
           ))}
         </div>
+        {loading && <p className="text-sm text-gray-400">Creating your OS...</p>}
+        {error && <p className="text-sm text-red-500">{error}</p>}
       </div>
 
-      {/* Footer hint */}
       <p className="mt-8 text-xs text-gray-400">More devices coming soon…</p>
     </main>
   );

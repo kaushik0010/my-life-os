@@ -8,18 +8,42 @@ import { PowerOffScreen } from "@/features/device/PowerOffScreen";
 import { Desktop } from "@/features/os/Desktop";
 import { NokiaDevice } from "@/features/nokia/NokiaDevice";
 import { useSound } from "@/hooks/useSound";
+import { useAuth } from "@/components/AuthProvider";
 
 type DeviceState = "booting" | "ready" | "shuttingDown" | "off" | "restarting" | "poweredOff";
 
-export function DeviceExperience({ device = "xp" }: { device?: string }) {
-  // Nokia has its own device frame — renders outside the XP monitor
+interface DeviceExperienceProps {
+  device?: string;
+  osId: string;
+  isTemporary?: boolean;
+  osUserId?: string | null;
+  folders?: Array<{ id: string; name: string; os_id: string }>;
+  files?: Array<{ id: string; name: string; content: string; folder_id: string }>;
+  messages?: Array<{ id: string; sender: string; content: string; time: string; os_id: string }>;
+}
+
+export function DeviceExperience({
+  device = "xp",
+  osId,
+  isTemporary = true,
+  osUserId = null,
+  folders = [],
+  files = [],
+  messages = [],
+}: DeviceExperienceProps) {
+  const { user } = useAuth();
+
+  // Owner if: no owner set (temp OS creator) OR logged-in user matches the owner
+  const isOwner = !osUserId || (!!user && user.id === osUserId);
+
+  // Nokia has its own device frame
   if (device === "nokia") {
-    return <NokiaDevice />;
+    return <NokiaDevice osId={osId} isOwner={isOwner} isTemporary={isTemporary} messages={messages} />;
   }
+
   const [deviceState, setDeviceState] = useState<DeviceState>("booting");
   const playStartup = useSound("/sounds/windows-xp-startup.mp3");
 
-  // Boot sequence — runs whenever state enters "booting"
   useEffect(() => {
     if (deviceState !== "booting") return;
 
@@ -55,7 +79,6 @@ export function DeviceExperience({ device = "xp" }: { device?: string }) {
     } else if (deviceState === "off" || deviceState === "poweredOff") {
       setDeviceState("booting");
     }
-    // ignore clicks during transitions
   }, [deviceState]);
 
   function renderScreen() {
@@ -63,7 +86,17 @@ export function DeviceExperience({ device = "xp" }: { device?: string }) {
       case "booting":
         return <BootScreen />;
       case "ready":
-        return <Desktop onShutdown={handleShutdown} onRestart={handleRestart} />;
+        return (
+          <Desktop
+            onShutdown={handleShutdown}
+            onRestart={handleRestart}
+            osId={osId}
+            isTemporary={isTemporary}
+            isOwner={isOwner}
+            dbFolders={folders}
+            dbFiles={files}
+          />
+        );
       case "shuttingDown":
         return <ShutdownScreen message="Windows is shutting down..." />;
       case "restarting":
@@ -71,7 +104,7 @@ export function DeviceExperience({ device = "xp" }: { device?: string }) {
       case "off":
         return <PowerOffScreen />;
       case "poweredOff":
-        return null; // black screen — DeviceFrame screen bg-black handles it
+        return null;
     }
   }
 
