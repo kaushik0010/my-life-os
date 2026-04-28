@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 
 interface File {
   id: string;
@@ -13,10 +12,10 @@ interface FileViewerProps {
   file: File;
   isOwner?: boolean;
   onBack: () => void;
+  onFileSaved?: (fileId: string, content: string) => void;
 }
 
-export function FileViewer({ file, isOwner = true, onBack }: FileViewerProps) {
-  const router = useRouter();
+export function FileViewer({ file, isOwner = true, onBack, onFileSaved }: FileViewerProps) {
   const [content, setContent] = useState(file.content);
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
 
@@ -29,14 +28,18 @@ export function FileViewer({ file, isOwner = true, onBack }: FileViewerProps) {
     setStatus("saving");
 
     try {
-      await fetch("/api/files/update", {
+      const res = await fetch("/api/files/update", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ file_id: file.id, content }),
       });
-      setStatus("saved");
-      setTimeout(() => setStatus("idle"), 1500);
-      router.refresh();
+      if (res.ok) {
+        setStatus("saved");
+        setTimeout(() => setStatus("idle"), 1500);
+        onFileSaved?.(file.id, content);
+      } else {
+        setStatus("idle");
+      }
     } catch (err) {
       console.error("Failed to save file:", err);
       setStatus("idle");

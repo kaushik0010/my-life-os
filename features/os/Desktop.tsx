@@ -126,6 +126,27 @@ export function Desktop({
 
   // --- Click handlers ---
 
+  function handleFileSaved(fileId: string, newContent: string) {
+    setFolders((prev) =>
+      prev.map((folder) => ({
+        ...folder,
+        files: folder.files.map((file) =>
+          file.id === fileId ? { ...file, content: newContent } : file
+        ),
+      }))
+    );
+    if (openFolder) {
+      setOpenFolder((prev) =>
+        prev
+          ? { ...prev, files: prev.files.map((file) => (file.id === fileId ? { ...file, content: newContent } : file)) }
+          : null
+      );
+    }
+    if (selectedFile?.id === fileId) {
+      setSelectedFile((prev) => prev ? { ...prev, content: newContent } : null);
+    }
+  }
+
   function handleFolderClick(folder: Folder) {
     playClick();
     setOpenFolder(folder);
@@ -239,10 +260,19 @@ export function Desktop({
         body: JSON.stringify({ folder_id: openFolder.id, name: newFileName.trim(), content: "" }),
       });
       if (res.ok) {
-        setOpenFolder(null);
-        setSelectedFile(null);
+        const newFile = await res.json();
+        const createdFile: File = { id: newFile.id, name: newFile.name, content: newFile.content ?? "" };
+
+        // Add file to local state — keep folder open
+        setFolders((prev) =>
+          prev.map((f) =>
+            f.id === openFolder.id ? { ...f, files: [...f.files, createdFile] } : f
+          )
+        );
+        setOpenFolder((prev) =>
+          prev ? { ...prev, files: [...prev.files, createdFile] } : null
+        );
         setCreatingFile(false);
-        router.refresh();
       }
     } catch (err) {
       console.error("Failed to create file:", err);
@@ -420,7 +450,7 @@ export function Desktop({
           </div>
           <div className="p-4 bg-white">
             {selectedFile ? (
-              <FileViewer file={selectedFile} isOwner={isOwner} onBack={() => setSelectedFile(null)} />
+              <FileViewer file={selectedFile} isOwner={isOwner} onBack={() => setSelectedFile(null)} onFileSaved={handleFileSaved} />
             ) : (
               <div className="flex flex-col space-y-2">
                 {openFolder?.files && openFolder.files.length === 0 && !creatingFile && (
