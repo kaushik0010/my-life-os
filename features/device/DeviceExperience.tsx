@@ -108,5 +108,12 @@ export function DeviceExperience({
     }
   }
 
-  return <DeviceFrame onPowerToggle={handlePower}>{renderScreen()}</DeviceFrame>;
+  return <DeviceFrame onPowerToggle={handlePower}>
+    {!isOwner && deviceState === "ready" && (
+      <div className="absolute top-2 left-1/2 -translate-x-1/2 text-xs text-gray-500 bg-white/70 px-3 py-1 rounded shadow-sm z-50">
+        Exploring someone&apos;s Life OS
+      </div>
+    )}
+    {renderScreen()}
+  </DeviceFrame>;
 }

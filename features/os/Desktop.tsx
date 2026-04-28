@@ -363,7 +363,7 @@ export function Desktop({
               onChange={setNewFolderName}
               onSubmit={submitCreateFolder}
               onCancel={() => setCreatingFolder(false)}
-              placeholder="New Folder"
+              placeholder="e.g. school_days"
             />
           </div>
         )}
@@ -372,8 +372,10 @@ export function Desktop({
       {/* Empty state */}
       {folders.length === 0 && !creatingFolder && (
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none gap-1">
-          <p className="text-white/60 text-sm">No folders yet</p>
-          {isOwner && <p className="text-white/40 text-xs">Right-click to create a folder</p>}
+          <p className="text-white/60 text-sm">No memories saved here yet...</p>
+          {isOwner && (
+            <p className="text-white/40 text-xs">Right-click to add your first memory</p>
+          )}
         </div>
       )}
 
@@ -420,6 +422,12 @@ export function Desktop({
               <FileViewer file={selectedFile} isOwner={isOwner} onBack={() => setSelectedFile(null)} />
             ) : (
               <div className="flex flex-col space-y-2">
+                {openFolder?.files && openFolder.files.length === 0 && !creatingFile && (
+                  <div className="text-gray-500 text-xs py-2">
+                    No memories here yet...
+                    {isOwner && <div className="opacity-70 mt-1">Create a file to store a memory</div>}
+                  </div>
+                )}
                 {openFolder?.files.map((file) => (
                   <div key={file.id} onContextMenu={(e) => handleFileContextMenu(e, file.id)}>
                     {renamingFileId === file.id ? (
@@ -442,7 +450,7 @@ export function Desktop({
                       onChange={setNewFileName}
                       onSubmit={submitCreateFile}
                       onCancel={() => setCreatingFile(false)}
-                      placeholder="new_file.txt"
+                      placeholder="e.g. first_crush.txt"
                     />
                   ) : (
                     <button onClick={startCreateFile} className="text-left px-3 py-2 rounded text-sm text-blue-600 hover:bg-gray-100 focus:outline-none cursor-pointer">

@@ -147,8 +147,8 @@ export function NokiaScreen({
               </div>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center gap-1">
-                <p className="text-gray-600 text-xs">No messages yet</p>
-                {isOwner && <p className="text-gray-500 text-xs">Press + New</p>}
+                <p className="text-green-800 text-xs">No messages saved yet...</p>
+                {isOwner && <p className="text-gray-500 text-xs opacity-70">Press + New to save your first message</p>}
               </div>
             )}
           </div>
