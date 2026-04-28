@@ -93,6 +93,7 @@ export function NokiaScreen({
   function handleShare() {
     if (isTemporary) {
       localStorage.setItem("pending_os_id", osId);
+      localStorage.setItem("pending_device_type", "nokia");
       localStorage.setItem("pending_share", "true");
       setShowSave(true);
       return;
@@ -219,7 +220,7 @@ export function NokiaScreen({
       )}
 
       {/* Save modal */}
-      {showSave && <SaveModal osId={osId} onClose={() => setShowSave(false)} />}
+      {showSave && <SaveModal osId={osId} deviceType="nokia" onClose={() => setShowSave(false)} />}
 
       {/* Share modal */}
       {showShareModal && (

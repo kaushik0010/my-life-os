@@ -14,7 +14,8 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [signInEmail, setSignInEmail] = useState("");
-  const [signInState, setSignInState] = useState<"idle" | "input" | "sent">("idle");
+  const [signInState, setSignInState] = useState<"idle" | "input" | "sending" | "sent">("idle");
+  const [signInError, setSignInError] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown on outside click
@@ -29,6 +30,7 @@ export default function Home() {
     } else {
       setSignInState("idle");
       setSignInEmail("");
+      setSignInError(null);
     }
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [dropdownOpen]);
@@ -40,12 +42,21 @@ export default function Home() {
   }
 
   async function handleDropdownSignIn() {
-    if (!signInEmail.trim()) return;
+    if (!signInEmail.trim() || signInState === "sending") return;
+    setSignInError(null);
+    setSignInState("sending");
     const { error: authError } = await supabase.auth.signInWithOtp({
       email: signInEmail.trim(),
       options: { emailRedirectTo: window.location.origin },
     });
-    if (!authError) {
+    if (authError) {
+      if (authError.status === 429) {
+        setSignInError("Too many attempts. Please wait a moment.");
+      } else {
+        setSignInError("Failed to send login link. Try again.");
+      }
+      setSignInState("input");
+    } else {
       setSignInState("sent");
     }
   }
@@ -162,6 +173,7 @@ export default function Home() {
                           placeholder="you@example.com"
                           className="border border-[#e8d5b5] w-full px-2 py-1.5 text-sm rounded-lg outline-none focus:border-blue-400 bg-white"
                         />
+                        {signInError && <p className="text-xs text-red-500">{signInError}</p>}
                         <button
                           onClick={handleDropdownSignIn}
                           className="w-full bg-blue-600 text-white text-xs py-1.5 rounded-lg hover:bg-blue-700 active:scale-95 transition-all duration-100 cursor-pointer font-medium"
@@ -169,6 +181,9 @@ export default function Home() {
                           Send magic link
                         </button>
                       </div>
+                    )}
+                    {signInState === "sending" && (
+                      <p className="text-xs text-gray-500 text-center py-1">Sending…</p>
                     )}
                     {signInState === "sent" && (
                       <p className="text-xs text-gray-600 text-center py-1">

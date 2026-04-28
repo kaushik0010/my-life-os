@@ -5,19 +5,23 @@ import { supabase } from "@/lib/supabase";
 
 interface SaveModalProps {
   osId: string;
+  deviceType?: string;
   onClose: () => void;
 }
 
-export function SaveModal({ osId, onClose }: SaveModalProps) {
+export function SaveModal({ osId, deviceType = "xp", onClose }: SaveModalProps) {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
 
   async function handleLogin() {
-    if (!email.trim()) return;
+    if (!email.trim() || sending) return;
     setError(null);
+    setSending(true);
 
     localStorage.setItem("pending_os_id", osId);
+    localStorage.setItem("pending_device_type", deviceType);
 
     const { error: authError } = await supabase.auth.signInWithOtp({
       email: email.trim(),
@@ -28,9 +32,15 @@ export function SaveModal({ osId, onClose }: SaveModalProps) {
 
     if (authError) {
       console.error("Auth error:", authError);
-      setError("Failed to send magic link. Try again.");
+      if (authError.status === 429) {
+        setError("Too many attempts. Please wait a moment and try again.");
+      } else {
+        setError("Failed to send login link. Please try again.");
+      }
+      setSending(false);
     } else {
       setSent(true);
+      setSending(false);
     }
   }
 
@@ -52,20 +62,23 @@ export function SaveModal({ osId, onClose }: SaveModalProps) {
               onKeyDown={(e) => { if (e.key === "Enter") handleLogin(); }}
               placeholder="you@example.com"
               className="border border-gray-300 w-full px-2 py-1 text-sm outline-none focus:border-blue-500"
+              disabled={sending}
             />
             {error && <p className="text-xs text-red-500">{error}</p>}
             <div className="flex gap-2 justify-end">
               <button
                 onClick={onClose}
-                className="text-xs text-gray-500 px-3 py-1 hover:text-gray-700"
+                className="text-xs text-gray-500 px-3 py-1 hover:text-gray-700 cursor-pointer"
+                disabled={sending}
               >
                 Cancel
               </button>
               <button
                 onClick={handleLogin}
-                className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:brightness-110 active:scale-95 transition-all duration-100"
+                disabled={sending}
+                className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:brightness-110 active:scale-95 transition-all duration-100 cursor-pointer disabled:opacity-50"
               >
-                Send Link
+                {sending ? "Sending…" : "Send Link"}
               </button>
             </div>
           </>
@@ -76,7 +89,7 @@ export function SaveModal({ osId, onClose }: SaveModalProps) {
             </p>
             <button
               onClick={onClose}
-              className="text-xs text-gray-500 self-center hover:text-gray-700"
+              className="text-xs text-gray-500 self-center hover:text-gray-700 cursor-pointer"
             >
               Close
             </button>

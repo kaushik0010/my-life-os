@@ -147,6 +147,7 @@ export function Desktop({
     if (isTemporary) {
       // Require login first, then auto-share
       localStorage.setItem("pending_os_id", osId);
+      localStorage.setItem("pending_device_type", "xp");
       localStorage.setItem("pending_share", "true");
       setShowSave(true);
       return;
@@ -474,7 +475,7 @@ export function Desktop({
       />
 
       {/* Save modal */}
-      {showSave && <SaveModal osId={osId} onClose={() => setShowSave(false)} />}
+      {showSave && <SaveModal osId={osId} deviceType="xp" onClose={() => setShowSave(false)} />}
 
       {/* Share modal */}
       {showShareModal && (
