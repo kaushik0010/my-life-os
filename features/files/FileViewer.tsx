@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { authFetch } from "@/lib/api-client";
 
 interface File {
   id: string;
@@ -28,9 +29,8 @@ export function FileViewer({ file, isOwner = true, onBack, onFileSaved }: FileVi
     setStatus("saving");
 
     try {
-      const res = await fetch("/api/files/update", {
+      const res = await authFetch("/api/files/update", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ file_id: file.id, content }),
       });
       if (res.ok) {

@@ -7,6 +7,7 @@ import { NokiaList } from "@/features/nokia/NokiaList";
 import { NokiaMessage } from "@/features/nokia/NokiaMessage";
 import { SaveModal } from "@/components/SaveModal";
 import { useSound } from "@/hooks/useSound";
+import { authFetch } from "@/lib/api-client";
 
 type Screen = "menu" | "list" | "message" | "compose";
 
@@ -76,9 +77,8 @@ export function NokiaScreen({
     const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
     try {
-      const res = await fetch("/api/messages/create", {
+      const res = await authFetch("/api/messages/create", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ os_id: osId, sender: composeSender.trim(), content: composeContent.trim(), time }),
       });
       if (res.ok) {

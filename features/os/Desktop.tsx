@@ -9,6 +9,7 @@ import { Taskbar } from "@/features/os/Taskbar";
 import { InlineInput } from "@/components/ui/InlineInput";
 import { SaveModal } from "@/components/SaveModal";
 import { useSound } from "@/hooks/useSound";
+import { authFetch } from "@/lib/api-client";
 import {
   Dialog,
   DialogContent,
@@ -231,9 +232,8 @@ export function Desktop({
   async function submitCreateFolder() {
     if (!newFolderName.trim()) { setCreatingFolder(false); return; }
     try {
-      const res = await fetch("/api/folders/create", {
+      const res = await authFetch("/api/folders/create", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ os_id: osId, name: newFolderName.trim() }),
       });
       if (res.ok) router.refresh();
@@ -254,9 +254,8 @@ export function Desktop({
   async function submitCreateFile() {
     if (!newFileName.trim() || !openFolder) { setCreatingFile(false); return; }
     try {
-      const res = await fetch("/api/files/create", {
+      const res = await authFetch("/api/files/create", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ folder_id: openFolder.id, name: newFileName.trim(), content: "" }),
       });
       if (res.ok) {
@@ -295,9 +294,8 @@ export function Desktop({
     const name = renameFolderName.trim();
     setFolders((prev) => prev.map((f) => (f.id === renamingFolderId ? { ...f, name } : f)));
     setRenamingFolderId(null);
-    await fetch("/api/folders/update", {
+    await authFetch("/api/folders/update", {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ folder_id: renamingFolderId, name }),
     });
   }
@@ -331,9 +329,8 @@ export function Desktop({
       );
     }
     setRenamingFileId(null);
-    await fetch("/api/files/update-name", {
+    await authFetch("/api/files/update-name", {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ file_id: renamingFileId, name }),
     });
   }

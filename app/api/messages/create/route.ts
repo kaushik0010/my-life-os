@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase-server";
+import { getUserFromRequest } from "@/lib/auth";
 import { canCreateMessage } from "@/lib/limits";
 
 export async function POST(req: NextRequest) {
@@ -13,6 +14,25 @@ export async function POST(req: NextRequest) {
 
     if (!os_id || !sender || !content) {
       return NextResponse.json({ error: "os_id, sender, and content are required" }, { status: 400 });
+    }
+
+    const user = await getUserFromRequest(req);
+
+    // Fetch OS and validate ownership
+    const { data: os } = await supabaseServer
+      .from("life_os")
+      .select("id, user_id, is_temporary")
+      .eq("id", os_id)
+      .single();
+
+    if (!os) {
+      return NextResponse.json({ error: "OS not found" }, { status: 404 });
+    }
+
+    const isOwner = os.is_temporary === true || (user && os.user_id === user.id);
+    if (!isOwner) {
+      console.warn("Unauthorized message creation attempt", { userId: user?.id, os_id });
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const allowed = await canCreateMessage(os_id);
